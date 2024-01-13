@@ -5,6 +5,7 @@ import jm.task.core.jdbc.util.Util;
 
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -18,13 +19,12 @@ public class UserDaoJDBCImpl implements UserDao {
 
     }
     public void createUsersTable() {
-        String createUsersTable = "CREATE TABLE IF NOT EXISTS Users (" +
-                "id INT AUTO_INCREMENT PRIMARY KEY," +
-                "name VARCHAR(20) NOT NULL," +
-                "lastName VARCHAR(45) NOT NULL," +
-                "age TINYINT(3) NOT NULL)";
         try(Statement statement = connection.createStatement()) {
-            statement.executeUpdate(createUsersTable);
+            statement.executeUpdate("CREATE TABLE IF NOT EXISTS users ("+
+                    "id BIGINT AUTO_INCREMENT PRIMARY KEY,"+
+                    "name VARCHAR(25),"+
+                    "lastName VARCHAR(25),"+
+                    "age TINYINT)");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -39,18 +39,21 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void saveUser(String name, String lastName, byte age) {
-        String saveUser = "INSERT INTO Users (name, lastName, age) values ( \"" + name +"\", \"" + lastName + "\","+ age +")";
-        try(Statement statement = connection.createStatement()) {
-            statement.executeUpdate(saveUser);
+        try (PreparedStatement statement = connection.prepareStatement("INSERT INTO Users (name, lastName, age) VALUES (?, ?, ?)")) {
+            statement.setString(1, name);
+            statement.setString(2, lastName);
+            statement.setByte(3, age);
+            statement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
     public void removeUserById(long id) {
-        String removeUserById = "DELETE FROM Users WHERE id =" + id;
-        try(Statement statement = connection.createStatement()) {
-            statement.executeUpdate(removeUserById);
+        String removeUserById = "DELETE FROM Users WHERE id = ?";
+        try(PreparedStatement statement = connection.prepareStatement(removeUserById)) {
+            statement.setLong(1, id);
+            statement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
